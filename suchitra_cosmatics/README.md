@@ -146,3 +146,73 @@ To deploy this application to a production environment (e.g., Heroku, Render, Di
 
 4.  **Reverse Proxy**:
     - Place a web server like **Nginx** or **Apache** in front of your WSGI server to handle incoming HTTP requests, serve static files, and manage SSL.
+
+---
+
+## Deployment with Docker
+
+This project is configured for easy deployment using Docker and Docker Compose. This method encapsulates the application and its dependencies into containers for a consistent and portable environment.
+
+### 1. Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+### 2. Configure Environment Variables
+
+The `docker-compose.yml` file reads from a `.env` file. Make sure your `.env` file is correctly configured for production.
+
+```env
+# .env
+
+# SECURITY WARNING: Use a strong, unique key for production!
+SECRET_KEY='your-production-django-secret-key'
+
+# Set to False for production
+DEBUG=False
+
+# Add your domain name and 'localhost' for health checks
+ALLOWED_HOSTS=yourdomain.com,localhost,127.0.0.1
+
+# PostgreSQL Database Credentials
+# These must match the values in docker-compose.yml
+POSTGRES_DB=suchitra_db
+POSTGRES_USER=suchitra_user
+POSTGRES_PASSWORD=your_strong_password
+
+# Database URL for Django
+DATABASE_URL='postgres://suchitra_user:your_strong_password@db:5432/suchitra_db'
+```
+
+**Note**: The `DATABASE_URL` host is `db`, which is the name of the database service defined in `docker-compose.yml`.
+
+### 3. Build and Run the Containers
+
+From the project root directory (where `docker-compose.yml` is located), run the following command to build the images and start the services in the background:
+
+```bash
+docker-compose up --build -d
+```
+
+- `--build`: Forces Docker to rebuild the image, picking up any changes in your code or `Dockerfile`.
+- `-d`: Runs the containers in detached mode (in the background).
+
+### 4. Initial Setup (First-Time Run)
+
+The `entrypoint.sh` script will automatically run database migrations. However, you still need to create a superuser inside the running container.
+
+```bash
+# Create a superuser
+docker-compose exec web python manage.py createsuperuser
+
+# Collect static files (if not handled in Dockerfile)
+docker-compose exec web python manage.py collectstatic --no-input
+```
+
+Your application should now be running and accessible on port 8000 of your server.
+
+### 5. Managing the Application
+
+- **To stop the services**: `docker-compose down`
+- **To view logs**: `docker-compose logs -f web`
+- **To run a management command**: `docker-compose exec web python manage.py <command>`
