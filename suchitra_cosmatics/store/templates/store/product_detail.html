@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <!-- Image Gallery -->
+    <div x-data="{ mainImage: '{{ product.images.first.image.url }}' }">
+        <div class="mb-4">
+            <img :src="mainImage" alt="{{ product.name }}" class="w-full h-auto object-cover rounded-lg shadow-lg aspect-[3/4]">
+        </div>
+        {% if product.images.all|length > 1 %}
+        <div class="grid grid-cols-4 gap-2">
+            {% for image in product.images.all %}
+            <div @click="mainImage = '{{ image.image.url }}'" class="cursor-pointer border-2 rounded-md" :class="{ 'border-pink-500': mainImage === '{{ image.image.url }}' }">
+                <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}" class="w-full h-auto object-cover rounded aspect-[3/4]">
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Product Info -->
+    <div class="flex flex-col space-y-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">{{ product.name }}</h1>
+            <p class="text-2xl font-bold text-pink-600 mt-2">₹{{ product.price }}</p>
+        </div>
+
+        <p class="text-gray-600 leading-relaxed">{{ product.description }}</p>
+
+        <!-- Add to Cart Form -->
+        <form action="{% url 'cart:cart_add' product.id %}" method="post" class="flex items-center space-x-4">
+            {% csrf_token %}
+            <div>
+                <label for="quantity" class="sr-only">Quantity</label>
+                <input type="number" name="quantity" id="quantity" value="1" min="1" class="w-20 p-3 border rounded-lg text-center">
+            </div>
+            <button type="submit" class="flex-1 bg-gray-800 text-white py-3 rounded-lg font-semibold text-lg hover:bg-gray-900 transition-colors">
+                Add to Cart
+            </button>
+        </form>
+
+        <div class="space-y-4">
+            <div x-data="{ open: false }" class="border-t pt-4">
+                <button @click="open = !open" class="w-full flex justify-between items-center text-lg font-semibold text-gray-700">
+                    <span>Ingredients</span>
+                    <span x-text="open ? '-' : '+'" class="text-2xl"></span>
+                </button>
+                <div x-show="open" x-collapse class="mt-2 text-gray-600">
+                    <p>{{ product.ingredients|linebreaksbr }}</p>
+                </div>
+            </div>
+            <div x-data="{ open: false }" class="border-t pt-4">
+                <button @click="open = !open" class="w-full flex justify-between items-center text-lg font-semibold text-gray-700">
+                    <span>How to Use</span>
+                    <span x-text="open ? '-' : '+'" class="text-2xl"></span>
+                </button>
+                <div x-show="open" x-collapse class="mt-2 text-gray-600">
+                    <p>{{ product.how_to_use|linebreaksbr }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

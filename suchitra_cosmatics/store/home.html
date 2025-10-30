@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Premium Cosmetics for Radiant Skin{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-pink-100 rounded-lg mb-16 md:mb-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <h1 class="text-4xl md:text-6xl font-bold text-gray-800" style="font-family: 'Playfair Display', serif;">
+            Beauty in Simplicity
+        </h1>
+        <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+            Discover our curated collection of premium cosmetics, designed to enhance your natural radiance.
+        </p>
+        <a href="{% url 'store:product_list' %}" class="mt-8 inline-block bg-gray-800 text-white uppercase tracking-wide font-semibold text-sm px-8 py-3 rounded-lg hover:bg-gray-900 transition-colors">
+            Shop All Products
+        </a>
+    </div>
+</div>
+
+<!-- Featured Products Section -->
+<div class="mb-16 md:mb-24">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="font-family: 'Playfair Display', serif;">Featured Products</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for product in featured_products %}
+        <a href="{{ product.get_absolute_url }}" class="group">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden transform transition-transform duration-300 group-hover:scale-105">
+                {% if product.images.first.image.url %}
+                <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="w-full h-80 object-cover">
+                {% endif %}
+                <div class="p-4 text-center">
+                    <h4 class="font-semibold text-lg">{{ product.name }}</h4>
+                    <p class="text-gray-600">${{ product.price }}</p>
+                </div>
+            </div>
+        </a>
+        {% empty %}
+        <p class="col-span-full text-center text-gray-500">No featured products at the moment. Check back soon!</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Testimonials Section -->
+<div>
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="font-family: 'Playfair Display', serif;">What Our Customers Say</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        {% for testimonial in testimonials %}
+        <div class="bg-white p-8 rounded-lg shadow-md text-center">
+            <p class="text-gray-600 italic mb-4">"{{ testimonial.quote }}"</p>
+            <p class="font-semibold text-gray-800">- {{ testimonial.customer_name }}</p>
+            <!-- You can add a star rating here later -->
+        </div>
+        {% empty %}
+        <p class="col-span-full text-center text-gray-500">No testimonials yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

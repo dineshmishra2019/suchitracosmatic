@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results for "{{ query }}"{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold">Search Results</h1>
+    {% if query %}
+        <p class="text-lg text-gray-600">You searched for: <span class="font-semibold">"{{ query }}"</span></p>
+    {% endif %}
+</div>
+
+{% if products %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        {% for product in products %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden group">
+                <a href="{{ product.get_absolute_url }}">
+                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="w-full h-64 object-cover group-hover:opacity-80 transition-opacity">
+                </a>
+                <div class="p-4">
+                    <h2 class="text-lg font-semibold truncate">{{ product.name }}</h2>
+                    <p class="text-pink-600 font-bold mt-1">₹{{ product.price }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-16">
+        <p class="text-xl text-gray-600">No products found matching your search.</p>
+    </div>
+{% endif %}
+
+<!-- Pagination -->
+{% if products.has_other_pages %}
+<div class="mt-12 flex justify-center items-center space-x-4">
+    {% if products.has_previous %}
+        <a href="?page={{ products.previous_page_number }}&{{ query_params }}" class="px-4 py-2 bg-white border rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Previous
+        </a>
+    {% endif %}
+
+    {% for i in products.paginator.page_range %}
+        {% if products.number == i %}
+            <span class="px-4 py-2 bg-pink-600 border border-transparent rounded-md text-sm font-medium text-white">{{ i }}</span>
+        {% else %}
+            <a href="?page={{ i }}&{{ query_params }}" class="px-4 py-2 bg-white border rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">{{ i }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if products.has_next %}
+        <a href="?page={{ products.next_page_number }}&{{ query_params }}" class="px-4 py-2 bg-white border rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Next
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

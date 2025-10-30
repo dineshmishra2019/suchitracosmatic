@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}{% if form.instance.pk %}Edit Product{% else %}Add Product{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-3xl font-bold mb-6 text-center">
+        {% if form.instance.pk %}Edit Product{% else %}Add New Product{% endif %}
+    </h1>
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <fieldset class="border p-4 rounded-lg">
+            <legend class="text-lg font-semibold px-2">Product Details</legend>
+            {{ form.as_p }}
+        </fieldset>
+
+        <fieldset class="border p-4 rounded-lg">
+            <legend class="text-lg font-semibold px-2">Product Images</legend>
+            {{ image_formset.management_form }}
+            {% for image_form in image_formset %}
+                <div class="border-b pb-4 mb-4">
+                    {% if image_form.instance.pk and image_form.instance.image %}
+                        <img src="{{ image_form.instance.image.url }}" alt="Product Image" class="h-20 w-20 object-cover rounded-md mb-2">
+                    {% endif %}
+                    {{ image_form.as_p }}
+                </div>
+            {% endfor %}
+        </fieldset>
+        
+        <div>
+            <button type="submit" class="w-full bg-gray-800 text-white py-3 rounded-lg font-semibold text-lg hover:bg-gray-900 transition-colors">Save Product</button>
+            <a href="{% url 'inventory:product-list' %}" class="block text-center mt-4 text-gray-600 hover:text-gray-800">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+
+# Environment variables
+.env
+
+# Media files (user-uploaded content)
+/media/
+
+# Static files (collected for production)
+/staticfiles/
+
+# IDE / Editor specific
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Linters
+.mypy_cache/
+.pytest_cache/
+.tox/
+
+# Coverage reports
+.coverage
+htmlcov/
