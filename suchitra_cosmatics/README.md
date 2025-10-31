@@ -216,3 +216,195 @@ Your application should now be running and accessible on port 8000 of your serve
 - **To stop the services**: `docker-compose down`
 - **To view logs**: `docker-compose logs -f web`
 - **To run a management command**: `docker-compose exec web python manage.py <command>`
+
+---
+
+## Deployment to Firebase and Google Cloud Run
+
+This guide explains how to deploy the Django application to a scalable, serverless environment using Google Cloud Run for the backend and Firebase Hosting for serving static assets and proxying requests.
+
+### 1. Prerequisites
+
+- A Google Cloud Platform (GCP) project.
+- The `gcloud` CLI installed and authenticated (`gcloud auth login`).
+- The Firebase CLI installed (`npm install -g firebase-tools`) and authenticated (`firebase login`).
+- Your project code pushed to a Git repository (e.g., GitHub, GitLab).
+
+### 2. Set Up Google Cloud Services
+
+#### a. Enable APIs
+
+In your GCP project, enable the following APIs:
+- Cloud Build API
+- Cloud Run Admin API
+- Cloud SQL Admin API
+
+#### b. Create a Cloud SQL (PostgreSQL) Instance
+
+1.  Navigate to **Cloud SQL** in the GCP Console and create a new PostgreSQL instance.
+2.  Choose a strong password for the `postgres` user.
+3.  Once created, go to the **Databases** tab and create a new database (e.g., `suchitra_db`).
+4.  Go to the **Connections** tab and note the **Connection name**. It will look like `project:region:instance-name`.
+
+#### c. Set Up Cloud Build Trigger (CI/CD)
+
+1.  Navigate to **Cloud Build** in the GCP Console.
+2.  Go to the **Triggers** tab and create a new trigger.
+3.  Connect your Git repository.
+4.  Configure the trigger to start on a push to your main branch.
+5.  For the **Configuration**, select **Cloud Build configuration file (yaml or json)**. The default path is `cloudbuild.yaml`.
+6.  Create a `cloudbuild.yaml` file in your project root:
+
+```yaml
+# cloudbuild.yaml
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/suchitra-cosmetics:$COMMIT_SHA', '.']
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/suchitra-cosmetics:$COMMIT_SHA']
+
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'suchitra-cosmetics' # Your service name
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/suchitra-cosmetics:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1' # Your service region
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--add-cloudsql-instances'
+      - '<YOUR_CLOUDSQL_CONNECTION_NAME>' # Paste your connection name here
+      - '--set-env-vars'
+      - 'DATABASE_URL=postgres://<USER>:<PASSWORD>@/<DB_NAME>?host=/cloudsql/<YOUR_CLOUDSQL_CONNECTION_NAME>'
+      - '--set-env-vars'
+      - 'SECRET_KEY=<YOUR_SECRET_KEY>,DEBUG=False,ALLOWED_HOSTS=<YOUR_FIREBASE_HOSTING_URL>,CSRF_TRUSTED_ORIGINS=https://<YOUR_FIREBASE_HOSTING_URL>'
+
+images:
+  - 'gcr.io/$PROJECT_ID/suchitra-cosmetics:$COMMIT_SHA'
+```
+
+**Important**: Replace all placeholder values (`<...>`) in the `cloudbuild.yaml` file with your actual configuration. For secrets like `SECRET_KEY` and `DATABASE_URL`, it is highly recommended to use **Secret Manager** instead of plain text.
+
+### 3. Set Up Firebase
+
+1.  In your local project directory, initialize Firebase:
+    ```bash
+    firebase init hosting
+    ```
+2.  Select **Use an existing project** and choose your GCP project.
+3.  When asked for your public directory, enter `staticfiles`. This matches the `STATIC_ROOT` in your Django settings and the `public` directory in `firebase.json`.
+4.  When asked to configure as a single-page app, say **No**.
+
+### 4. Deploy!
+
+1.  **Push to Git**: Commit all your new files (`firebase.json`, `cloudbuild.yaml`, etc.) and push them to your main branch. This will trigger Cloud Build to build your container and deploy it to Cloud Run.
+2.  **Deploy to Firebase Hosting**: After the Cloud Build is successful, run the following command to deploy your static files and hosting configuration:
+    ```bash
+    firebase deploy --only hosting
+    ```
+
+Your application is now live! Firebase Hosting will serve static files directly and route all other requests to your Django application running on Cloud Run.
+
+---
+
+## Deployment to Firebase and Google Cloud Run
+
+This guide explains how to deploy the Django application to a scalable, serverless environment using Google Cloud Run for the backend and Firebase Hosting for serving static assets and proxying requests.
+
+### 1. Prerequisites
+
+- A Google Cloud Platform (GCP) project.
+- The `gcloud` CLI installed and authenticated (`gcloud auth login`).
+- The Firebase CLI installed (`npm install -g firebase-tools`) and authenticated (`firebase login`).
+- Your project code pushed to a Git repository (e.g., GitHub, GitLab).
+
+### 2. Set Up Google Cloud Services
+
+#### a. Enable APIs
+
+In your GCP project, enable the following APIs:
+- Cloud Build API
+- Cloud Run Admin API
+- Cloud SQL Admin API
+
+#### b. Create a Cloud SQL (PostgreSQL) Instance
+
+1.  Navigate to **Cloud SQL** in the GCP Console and create a new PostgreSQL instance.
+2.  Choose a strong password for the `postgres` user.
+3.  Once created, go to the **Databases** tab and create a new database (e.g., `suchitra_db`).
+4.  Go to the **Connections** tab and note the **Connection name**. It will look like `project:region:instance-name`.
+
+#### c. Set Up Cloud Build Trigger (CI/CD)
+
+1.  Navigate to **Cloud Build** in the GCP Console.
+2.  Go to the **Triggers** tab and create a new trigger.
+3.  Connect your Git repository.
+4.  Configure the trigger to start on a push to your main branch.
+5.  For the **Configuration**, select **Cloud Build configuration file (yaml or json)**. The default path is `cloudbuild.yaml`.
+6.  Create a `cloudbuild.yaml` file in your project root:
+
+```yaml
+# cloudbuild.yaml
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/suchitra-cosmetics:$COMMIT_SHA', '.']
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/suchitra-cosmetics:$COMMIT_SHA']
+
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'suchitra-cosmetics' # Your service name
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/suchitra-cosmetics:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1' # Your service region
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--add-cloudsql-instances'
+      - '<YOUR_CLOUDSQL_CONNECTION_NAME>' # Paste your connection name here
+      - '--set-env-vars'
+      - 'DATABASE_URL=postgres://<USER>:<PASSWORD>@/<DB_NAME>?host=/cloudsql/<YOUR_CLOUDSQL_CONNECTION_NAME>'
+      - '--set-env-vars'
+      - 'SECRET_KEY=<YOUR_SECRET_KEY>,DEBUG=False,ALLOWED_HOSTS=<YOUR_FIREBASE_HOSTING_URL>,CSRF_TRUSTED_ORIGINS=https://<YOUR_FIREBASE_HOSTING_URL>'
+
+images:
+  - 'gcr.io/$PROJECT_ID/suchitra-cosmetics:$COMMIT_SHA'
+```
+
+**Important**: Replace all placeholder values (`<...>`) in the `cloudbuild.yaml` file with your actual configuration. For secrets like `SECRET_KEY` and `DATABASE_URL`, it is highly recommended to use **Secret Manager** instead of plain text.
+
+### 3. Set Up Firebase
+
+1.  In your local project directory, initialize Firebase:
+    ```bash
+    firebase init hosting
+    ```
+2.  Select **Use an existing project** and choose your GCP project.
+3.  When asked for your public directory, enter `staticfiles`. This matches the `STATIC_ROOT` in your Django settings and the `public` directory in `firebase.json`.
+4.  When asked to configure as a single-page app, say **No**.
+
+### 4. Deploy!
+
+1.  **Push to Git**: Commit all your new files (`firebase.json`, `cloudbuild.yaml`, etc.) and push them to your main branch. This will trigger Cloud Build to build your container and deploy it to Cloud Run.
+2.  **Deploy to Firebase Hosting**: After the Cloud Build is successful, run the following command to deploy your static files and hosting configuration:
+    ```bash
+    firebase deploy --only hosting
+    ```
+
+Your application is now live! Firebase Hosting will serve static files directly and route all other requests to your Django application running on Cloud Run.

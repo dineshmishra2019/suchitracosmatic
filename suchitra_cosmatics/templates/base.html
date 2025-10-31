@@ -48,6 +48,178 @@
             </div>
         </nav>
     </header>
+    <!-- Chatbot Widget CSS -->
+<style>
+    #chat-widget-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+    #chat-bubble {
+        width: 60px;
+        height: 60px;
+        background-color: #7c3aed; /* purple-600 */
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    #chat-bubble svg {
+        width: 32px;
+        height: 32px;
+        color: white;
+    }
+    #chat-popup {
+        display: none;
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 350px;
+        height: 500px;
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .chat-header {
+        background-color: #7c3aed;
+        color: white;
+        padding: 15px;
+        font-weight: bold;
+        text-align: center;
+    }
+    .chat-messages {
+        flex-grow: 1;
+        padding: 15px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .message {
+        padding: 8px 12px;
+        border-radius: 18px;
+        max-width: 80%;
+        word-wrap: break-word;
+    }
+    .user-message {
+        background-color: #e5e7eb; /* gray-200 */
+        align-self: flex-end;
+    }
+    .bot-message {
+        background-color: #f3f4f6; /* gray-100 */
+        align-self: flex-start;
+    }
+    .chat-input-container {
+        display: flex;
+        padding: 10px;
+        border-top: 1px solid #e5e7eb;
+    }
+    #chat-input {
+        flex-grow: 1;
+        border: 1px solid #d1d5db; /* gray-300 */
+        border-radius: 20px;
+        padding: 10px 15px;
+        outline: none;
+    }
+    #chat-submit {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0 10px;
+    }
+</style>
+
+<!-- Chatbot Widget HTML -->
+<div id="chat-widget-container">
+    <div id="chat-popup">
+        <div class="chat-header">Suchitra Cosmetics Assistant</div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot-message">Hello! How can I help you find the perfect product today?</div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Ask about products...">
+            <button id="chat-submit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+        </div>
+    </div>
+    <div id="chat-bubble">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    </div>
+</div>
+
+<!-- Chatbot Widget JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const chatBubble = document.getElementById('chat-bubble');
+    const chatPopup = document.getElementById('chat-popup');
+    const chatInput = document.getElementById('chat-input');
+    const chatSubmit = document.getElementById('chat-submit');
+    const chatMessages = document.getElementById('chat-messages');
+
+    chatBubble.addEventListener('click', () => {
+        const isHidden = chatPopup.style.display === 'none' || chatPopup.style.display === '';
+        chatPopup.style.display = isHidden ? 'flex' : 'none';
+    });
+
+    const sendMessage = async () => {
+        const question = chatInput.value.trim();
+        if (!question) return;
+
+        // Display user message
+        const userMessageDiv = document.createElement('div');
+        userMessageDiv.className = 'message user-message';
+        userMessageDiv.textContent = question;
+        chatMessages.appendChild(userMessageDiv);
+        chatInput.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Display typing indicator
+        const typingIndicator = document.createElement('div');
+        typingIndicator.className = 'message bot-message';
+        typingIndicator.textContent = '...';
+        chatMessages.appendChild(typingIndicator);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        try {
+            const response = await fetch('/api/chatbot/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ question: question })
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            
+            // Replace typing indicator with bot message
+            typingIndicator.textContent = data.answer;
+
+        } catch (error) {
+            console.error('Error:', error);
+            typingIndicator.textContent = 'Sorry, something went wrong. Please try again.';
+        } finally {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    };
+
+    chatSubmit.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+});
+</script>
 
     <main class="max-w-7xl mx-auto p-4 md:p-8">
         {% block content %}{% endblock %}

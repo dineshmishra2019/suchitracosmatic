@@ -25,7 +25,7 @@ urlpatterns = [
     path("cart/", include("cart.urls", namespace="cart")),
     path("account/", include("users.urls", namespace="users")),
     path("manage/", include("inventory.urls", namespace="inventory")),
-    path("", include("chatbot.urls")),  # Add this for the chatbot API
+    path("chatbot/", include("chatbot.urls", namespace="chatbot")),  # Add this for the chatbot API
 ]
 
 if settings.DEBUG:
